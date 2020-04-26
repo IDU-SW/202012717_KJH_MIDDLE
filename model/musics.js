@@ -17,19 +17,22 @@ class Music {
         }
     }
 
-    addMusic(title, director, year, synopsis) {
+    addMusic(title, artist, genre, url) {
         return new Promise((resolve, reject) => {
             let last = this.data[this.data.length - 1];
             let id = last.id + 1;
 
-            let newMusic = {id:id, title:title, director:director, year:year, synopsis:synopsis};
-            this.data.push(newMusic);
-
-            resolve(newMusic);
+            if(!title || !artist || !genre || !url) {
+                reject();
+            } else {
+                let newMusic = {id:id, title:title, artist:artist, genre:genre, url:url};
+                this.data.push(newMusic);
+                
+                resolve(newMusic);
+            }
         });
     }
 
-    // Promise - Reject
     getMusicDetail(musicId) {
         return new Promise((resolve, reject) => {
             for (var music of this.data ) {
@@ -41,6 +44,40 @@ class Music {
             reject({msg:'Can not find music', code:404});
         });
     }
+
+    updateMusic(musicId, title, artist, genre, url) {
+        return new Promise((resolve, reject) => {
+            
+            for (var music of this.data ) {
+                if ( music.id == musicId ) {
+                    if(!title || !artist || !genre || !url) {
+                        reject();                        
+                    } else {
+                        let id = Number(music.id);
+                        let newMusic = {id, title, artist, genre, url};
+                        this.data.splice(musicId, 1, newMusic);
+                        resolve(newMusic);
+                        return;
+                    }
+                }
+            }
+            reject({msg:'Can not find music', code:404});
+        });
+    }
+
+    deleteMusic(musicId) {
+        return new Promise((resolve, reject) => {
+            for (var music of this.data ) {
+                if ( music.id == musicId ) {
+                    this.data.splice(musicId, 1);
+                    resolve(music);
+                    return;
+                }
+            }
+            reject({msg:'Can not find music', code:404});
+        });
+    }
+
 }
 
 module.exports = new Music();
