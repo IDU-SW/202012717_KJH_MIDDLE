@@ -1,0 +1,28 @@
+<html>
+<head>
+   <meta charset="UTF-8" />
+</head>
+<body>
+    <table><form id="listForm" method="POST">
+    <% musics.forEach(function(item) { %>
+        <tr>
+            <td>Title</td><td><a href="/musics/<%= item.id %>"> <%= item.title %> </a></td><td><a href="javascript:updateFunc(<%= item.id %>)">수정</a></td><td><a href="javascript:deleteFunc(<%= item.id %>)">삭제</a></td>
+        </tr>
+    <% }) %>
+    <tr><td rowspan="3"><a href="/addMusics">새로 추가</a></td></tr>
+    </form></table>
+    <script>
+        function deleteFunc(id) {
+            form = document.getElementById("listForm");
+            
+            form.setAttribute("action", "/musics/" + id + "?_method=DELETE");
+            form.submit();
+        }
+        
+        function updateFunc(id) {
+            // update method로 id 전송.
+            location.href="/musics/update/"+id;
+        }
+    </script>
+</body>
+</html>

@@ -45,6 +45,18 @@ class Music {
         });
     }
 
+    getMusicDetailForUpdate(musicId) {
+        return new Promise((resolve, reject) => {
+            for (var music of this.data ) {
+                if ( music.id == musicId ) {
+                    resolve(music);
+                    return;
+                }
+            }
+            reject({msg:'Can not find music', code:404});
+        });
+    }
+
     updateMusic(musicId, title, artist, genre, url) {
         return new Promise((resolve, reject) => {
             

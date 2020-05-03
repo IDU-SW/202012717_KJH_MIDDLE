@@ -7,13 +7,17 @@ router.get('/musics/:musicId', showMusicDetail);
 router.post('/musics', addMusic);
 router.put('/musics/:musicId', updateMusic);
 router.delete('/musics/:musicId', deleteMusic);
+router.get('/addMusics', addMuisicForm);
+router.get('/musics/update/:musicId', updateMusicForm);
 
 module.exports = router;
 
 function showMusicList(req, res) {
     const musicList = musics.getMusicList();
     const result = { data:musicList, count:musicList.length };
-    res.send(result);
+    
+    // 템플릿 엔진에 데이터 전달
+    res.render('list', {musics:result.data});
 }
 
 
@@ -24,7 +28,9 @@ async function showMusicDetail(req, res) {
         const musicId = req.params.musicId;
         console.log('musicId : ', musicId);
         const info = await musics.getMusicDetail(musicId);
-        res.send(info);
+
+        // 템플릿 엔진에 데이터 전달
+        res.render('read', {music:info});
     }
     catch ( error ) {
         console.log('Can not find, 404');
@@ -45,7 +51,10 @@ async function addMusic(req, res) {
 
     try {
         const result = await musics.addMusic(title, artist, genre, url);
-        res.send({msg:'success', data:result});
+        
+        res.statusCode = 302;
+        res.setHeader('Location', '/musics');
+        res.end();
     }
     catch ( error ) {
         res.status(500).send(error.msg);
@@ -66,7 +75,10 @@ async function updateMusic(req, res) {
         const musicId = req.params.musicId;
         
         const result = await musics.updateMusic(musicId, title, artist, genre, url);
-        res.send({msg:'success', data:result});
+        
+        res.statusCode = 302;
+        res.setHeader('Location', '/musics');
+        res.end();
     }
     catch ( error ) {
         res.status(500).send(error.msg);
@@ -80,7 +92,31 @@ async function deleteMusic(req, res) {
         const musicId = req.params.musicId;
         console.log('delete musicId : ', musicId);
         const info = await musics.deleteMusic(musicId);
-        res.send(info);
+        
+        res.statusCode = 302;
+        res.setHeader('Location', '/musics');
+        res.end();
+    }
+    catch ( error ) {
+        console.log('Can not find, 404');
+        res.status(error.code).send({msg:error.msg});
+    }
+}
+
+function addMuisicForm(req, res) {
+    // 템플릿 엔진에 데이터 전달
+    res.render('new-form');
+}
+
+async function updateMusicForm(req, res) {
+    try {
+        // 음악 상세 정보 Id
+        const musicId = req.params.musicId;
+        console.log('musicId : ', musicId);
+        const info = await musics.getMusicDetailForUpdate(musicId);
+
+        // 템플릿 엔진에 데이터 전달
+        res.render('update-form', {music:info});
     }
     catch ( error ) {
         console.log('Can not find, 404');

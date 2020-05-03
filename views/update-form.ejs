@@ -1,0 +1,35 @@
+<html>
+<head>
+   <meta charset="UTF-8" />
+</head>
+<body>
+    <form id="updateForm" action="/musics" method="POST">
+    <table>
+        <tr>
+            <td>id</td><td><input type="text" id="id" name="id" value="<%= music.id %>" readonly/></td>
+        </tr>
+        <tr>
+            <td>title</td><td><input type="text" id="title" name="title" value="<%= music.title %>"/></td>
+        </tr>
+        <tr>
+            <td>artist</td><td><input type="text" id="artist" name="artist" value="<%= music.artist %>"/></td>
+        </tr>
+        <tr>
+            <td>genre</td><td><input type="text" id="genre" name="genre" value="<%= music.genre %>"/></td>
+        </tr>
+        <tr>
+            <td>url</td><td><input type="text" id="url" name="url" value="<%= music.url %>"/></td>
+        </tr>
+        <tr><td rowspan="3"><a href="javascript:updateFunc(<%= music.id %>)">수정하기</a></td></tr>
+    </table>
+    </form>
+    <script>
+        function updateFunc(id) {
+            form = document.getElementById("updateForm");
+            
+            form.setAttribute("action", "/musics/" + id + "?_method=PUT");
+            form.submit();
+        }
+    </script>
+</body>
+</html>
