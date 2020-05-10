@@ -87,7 +87,7 @@ MusicModel.deleteMusic = async (id) => {
 }
 
 MusicModel.initModel = async () => {
-    const sql = 'drop table if exists musics; create table musics ( id int primary key auto_increment, title varchar(300), artist varchar(100), genre varchar(100), url varchar(300));';
+    const sql = 'drop table if exists musics; create table musics ( id int primary key auto_increment, title varchar(300), artist varchar(100), genre varchar(100), url varchar(300));insert into musics values("1", "X song", "볼빨간 사춘기", "K-pop", "https://www.youtube.com/watch?v=ZD9jqLNN_V4");';
     await pool.query(sql);
 }
 

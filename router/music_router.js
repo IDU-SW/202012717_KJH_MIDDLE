@@ -3,6 +3,7 @@ const router = express.Router();
 // const musics = require('../model/musics');
 const musics = require('../model/musicModel');
 
+router.get('/initModel', initModel);
 router.get('/musics', showMusicList);
 router.get('/musics/:musicId', showMusicDetail);
 router.post('/musics', addMusic);
@@ -12,6 +13,20 @@ router.get('/addMusics', addMuisicForm);
 router.get('/musics/update/:musicId', updateMusicForm);
 
 module.exports = router;
+
+async function initModel(req, res) {
+    try {
+        await musics.initModel();
+        // 테이블 생성 및 테스트 데이터 입력
+        
+        res.statusCode = 302;
+        res.setHeader('Location', '/musics');
+        res.end();
+    }
+    catch ( error ) {
+        res.status(500).send(error.msg);
+    }
+}
 
 async function showMusicList(req, res) {
     const musicList = await musics.getMusicList();
