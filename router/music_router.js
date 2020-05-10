@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const musics = require('../model/musics');
+// const musics = require('../model/musics');
+const musics = require('../model/musicModel');
 
 router.get('/musics', showMusicList);
 router.get('/musics/:musicId', showMusicDetail);
@@ -12,10 +13,10 @@ router.get('/musics/update/:musicId', updateMusicForm);
 
 module.exports = router;
 
-function showMusicList(req, res) {
-    const musicList = musics.getMusicList();
+async function showMusicList(req, res) {
+    const musicList = await musics.getMusicList();
     const result = { data:musicList, count:musicList.length };
-    
+    console.log(result);
     // 템플릿 엔진에 데이터 전달
     res.render('list', {musics:result.data});
 }
@@ -27,7 +28,7 @@ async function showMusicDetail(req, res) {
         // 음악 상세 정보 Id
         const musicId = req.params.musicId;
         console.log('musicId : ', musicId);
-        const info = await musics.getMusicDetail(musicId);
+        const info = await musics.getMusic(musicId);
 
         // 템플릿 엔진에 데이터 전달
         res.render('read', {music:info});
@@ -50,7 +51,7 @@ async function addMusic(req, res) {
     validation(res, title, artist, genre, url);
 
     try {
-        const result = await musics.addMusic(title, artist, genre, url);
+        const result = await musics.insertMusic(title, artist, genre, url);
         
         res.statusCode = 302;
         res.setHeader('Location', '/musics');
@@ -113,7 +114,7 @@ async function updateMusicForm(req, res) {
         // 음악 상세 정보 Id
         const musicId = req.params.musicId;
         console.log('musicId : ', musicId);
-        const info = await musics.getMusicDetailForUpdate(musicId);
+        const info = await musics.getMusic(musicId);
 
         // 템플릿 엔진에 데이터 전달
         res.render('update-form', {music:info});
