@@ -30,10 +30,10 @@ async function initModel(req, res) {
 
 async function showMusicList(req, res) {
     const musicList = await musics.getMusicList();
-    const result = { data:musicList, count:musicList.length };
-    console.log(result);
+    console.log("musicList : ");
+    console.log(musicList);
     // 템플릿 엔진에 데이터 전달
-    res.render('list', {musics:result.data});
+    res.render('list', {musics:musicList});
 }
 
 
@@ -44,7 +44,7 @@ async function showMusicDetail(req, res) {
         const musicId = req.params.musicId;
         console.log('musicId : ', musicId);
         const info = await musics.getMusic(musicId);
-
+        console.log(info);
         // 템플릿 엔진에 데이터 전달
         res.render('read', {music:info});
     }
@@ -66,7 +66,13 @@ async function addMusic(req, res) {
     validation(res, title, artist, genre, url);
 
     try {
-        const result = await musics.insertMusic(title, artist, genre, url);
+        const musicData = {
+            title: title,
+            artist: artist,
+            genre : genre,
+            url: url
+        };
+        const result = await musics.insertMusic(musicData);
         
         res.statusCode = 302;
         res.setHeader('Location', '/musics');
@@ -90,7 +96,14 @@ async function updateMusic(req, res) {
         // 음악 상세 정보 Id
         const musicId = req.params.musicId;
         
-        const result = await musics.updateMusic(musicId, title, artist, genre, url);
+        const musicData = {
+            id: musicId,
+            title: title,
+            artist: artist,
+            genre : genre,
+            url: url
+        };
+        const result = await musics.updateMusic(musicData);
         
         res.statusCode = 302;
         res.setHeader('Location', '/musics');

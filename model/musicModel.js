@@ -1,94 +1,114 @@
 const pool = require('./dbConnection');
-
+const Sequelize = require('sequelize');
+const sequelize = new Sequelize('example', 'dev', 'secret', {
+    dialect: 'mysql', host: '127.0.0.1',
+    pool: {
+    max: 10, // 커넥션 최대 개수
+    min: 0, // 풀에 유지하는 커넥션 최소 개수
+    acquire: 60000, // 커넥션 풀에서 커넥션 얻기 최대 대기 시간(기본 60초)
+    idle: 10000, // 커넥션이 해제되기 전 idle 상태 대기 시간(msec, 기본 10초)
+    evict: 1000 // 커넥션 풀에서 사용하지 않는 커넥션 해제 검사 간격(interval)
+    }
+});
 class MusicModel {}
+class Musics extends Sequelize.Model {}
+
+Musics.init({
+    id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    title: Sequelize.STRING(300),
+    artist: Sequelize.STRING(100),
+    genre: Sequelize.STRING(100),
+    url: Sequelize.STRING(300),
+    createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE
+    },
+    updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE
+    }
+}, {sequelize}); 
 
 MusicModel.getMusicList = async () => {
-    const sql = 'SELECT * FROM musics';
-
-    let conn;
-    try {
-        conn = await pool.getConnection();
-        const [rows, metadata] = await conn.query(sql);
-        conn.release();
-        console.log("TESTLOG");
-        console.log(rows);
-        
-        return rows;
-    } catch (error) {
-        console.error(error);
-    } finally {
-        if ( conn ) conn.release();
-    }
+    await Musics.findAll({})
+    .then( results => {
+        musicList = results;
+    })
+    .catch(err => {
+        console.error('연결 실패 :', err);
+    });
+    return musicList;
 }    
 
-MusicModel.insertMusic = async (title, artist, genre, url) => {
-    const sql = 'INSERT INTO musics SET ?';
-    const data= {title, artist, genre, url};
-
-    let conn;
+MusicModel.insertMusic = async (musicData) => {
     try {
-        conn = await pool.getConnection();
-        const ret = await conn.query(sql, data);
-        console.log(ret);
-        const musicId = ret[0]['insertId'];
-        return musicId;
+        let music = await Musics.create({
+            title: musicData.title,
+            artist: musicData.artist,
+            genre : musicData.genre,
+            url: musicData.url
+        }, {logging:false});
+        const newData = music.dataValues;
+
+        return newData;
     } catch (error) {
         console.error(error);
-    } finally {
-        if ( conn ) conn.release();
     }
 }
 
 MusicModel.getMusic = async (musicId) => {
-    const sql = 'SELECT * FROM musics WHERE id = ?';
-    let conn;
-    try {        
-        conn = await pool.getConnection();
-        const [rows, metadata] = await conn.query(sql, musicId);
-        conn.release();
-        return rows[0];
-    } catch (error) {
-        console.error(error);
-    } finally {
-        if ( conn ) conn.release();
-    }
+    let music = null;
+    await Musics.findAll({
+        where:{id:musicId}
+    })
+    .then( results => {
+        music = results[0];
+    })
+    .catch(err => {
+        console.error('연결 실패 :', err);
+    });
+    
+    return music;
 }
 
-MusicModel.updateMusic = async (id, title, artist, genre, url) => {
-    const sql = 'UPDATE musics SET ? WHERE id = ?';
-    const data = {id, title, artist, genre, url};
-    const condition = id;
-
-    let conn;
-    try {
-        conn = await pool.getConnection();
-        const ret = await conn.query(sql, [data, condition] );
-        const info = ret[0];
-        return data;
-    } catch (error) {
-        console.error(error);  
-    } finally {
-        if ( conn ) conn.release();
-    }
+MusicModel.updateMusic = async (musicData) => {
+    let returnValue = await Musics.update(
+        { 
+            title: musicData.title,
+            artist: musicData.artist,
+            genre: musicData.genre,
+            url: musicData.url
+        },
+        { where: { id: musicData.id } }
+    );
+    return returnValue;
 }
 
 MusicModel.deleteMusic = async (id) => {
-    const sql = 'DELETE FROM musics WHERE id = ?';
-    let conn;
     try {
-        conn = await pool.getConnection();        
-        const ret = await conn.query(sql, parseInt(id));
-        return ret[0]['affectedRows'];
+        let result = await Musics.destroy({where: {id:id}});
     } catch (error) {
         console.error(error);  
-    } finally {
-        if ( conn ) conn.release();
     }
 }
 
 MusicModel.initModel = async () => {
-    const sql = 'drop table if exists musics; create table musics ( id int primary key auto_increment, title varchar(300), artist varchar(100), genre varchar(100), url varchar(300));insert into musics values("1", "X song", "볼빨간 사춘기", "K-pop", "https://www.youtube.com/watch?v=ZD9jqLNN_V4");';
-    await pool.query(sql);
+    await sequelize.authenticate()
+    .then(() => {
+        console.log('Sequelize DB 연결 성공');
+        Musics.sync().then( ret => {
+            console.log('Sync Success :', ret);
+        }).catch(error => {
+            console.log('Sync Failure :', error);
+        });
+    })
+    .catch(err => {
+        console.error('Sequelize DB 연결 실패 :', err);
+    });
 }
 
 module.exports = MusicModel;
