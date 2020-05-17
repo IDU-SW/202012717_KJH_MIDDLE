@@ -4,6 +4,7 @@ const router = express.Router();
 const musics = require('../model/musicModel');
 
 router.get('/initModel', initModel);
+router.get('/initRelation', initRelation);
 router.get('/musics', showMusicList);
 router.get('/musics/:musicId', showMusicDetail);
 router.post('/musics', addMusic);
@@ -28,11 +29,24 @@ async function initModel(req, res) {
     }
 }
 
+async function initRelation(req, res) {
+    try {
+        await musics.initRelation();
+        // 관계 형성
+        
+        res.statusCode = 302;
+        res.setHeader('Location', '/musics');
+        res.end();
+    }
+    catch ( error ) {
+        res.status(500).send(error.msg);
+    }
+}
+
 async function showMusicList(req, res) {
     const musicList = await musics.getMusicList();
-    console.log("musicList : ");
-    console.log(musicList);
     // 템플릿 엔진에 데이터 전달
+
     res.render('list', {musics:musicList});
 }
 
@@ -62,6 +76,7 @@ async function addMusic(req, res) {
     const artist = req.body.artist;
     const genre = req.body.genre;
     const url = req.body.url;
+    const albumName = req.body.albumName;
 
     validation(res, title, artist, genre, url);
 
@@ -70,7 +85,8 @@ async function addMusic(req, res) {
             title: title,
             artist: artist,
             genre : genre,
-            url: url
+            url: url,
+            albumName: albumName
         };
         const result = await musics.insertMusic(musicData);
         
@@ -89,6 +105,7 @@ async function updateMusic(req, res) {
     const artist = req.body.artist;
     const genre = req.body.genre;
     const url = req.body.url;
+    const albumName = req.body.albumName;
 
     validation(res, title, artist, genre, url);
 
@@ -101,7 +118,8 @@ async function updateMusic(req, res) {
             title: title,
             artist: artist,
             genre : genre,
-            url: url
+            url: url,
+            albumName: albumName
         };
         const result = await musics.updateMusic(musicData);
         

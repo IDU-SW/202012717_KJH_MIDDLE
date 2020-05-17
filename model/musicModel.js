@@ -33,6 +33,25 @@ Musics.init({
     }
 }, {sequelize}); 
 
+class MusicAlbums extends Sequelize.Model {}
+
+MusicAlbums.init({
+    id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    Albumname: Sequelize.STRING(300),
+    createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE
+    },
+    updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE
+    }
+}, {sequelize}); 
+
 MusicModel.getMusicList = async () => {
     await Musics.findAll({})
     .then( results => {
@@ -52,7 +71,12 @@ MusicModel.insertMusic = async (musicData) => {
             genre : musicData.genre,
             url: musicData.url
         }, {logging:false});
+        let album = await MusicAlbums.create({
+            Albumname: musicData.albumName
+        }, {logging:false});
         const newData = music.dataValues;
+
+        await music.setMusicAlbums(album);
 
         return newData;
     } catch (error) {
@@ -63,7 +87,8 @@ MusicModel.insertMusic = async (musicData) => {
 MusicModel.getMusic = async (musicId) => {
     let music = null;
     await Musics.findAll({
-        where:{id:musicId}
+        where:{id:musicId},
+        include: [{model: MusicAlbums}]
     })
     .then( results => {
         music = results[0];
@@ -76,16 +101,34 @@ MusicModel.getMusic = async (musicId) => {
 }
 
 MusicModel.updateMusic = async (musicData) => {
-    let returnValue = await Musics.update(
-        { 
-            title: musicData.title,
-            artist: musicData.artist,
-            genre: musicData.genre,
-            url: musicData.url
-        },
-        { where: { id: musicData.id } }
-    );
-    return returnValue;
+    try {
+        let music = await MusicModel.getMusic(musicData.id);
+        music.dataValues.title = musicData.title;
+        music.dataValues.artist = musicData.artist;
+        music.dataValues.genre = musicData.genre;
+        music.dataValues.url = musicData.url;
+        if(musicData.albumName)
+        {
+            const albumData = await MusicAlbums.findByPk(musicData.id);
+            albumData.Albumname = musicData.albumName;
+            await albumData.save();
+
+            music.MusicAlbum.dataValues.AlbumName = musicData.albumName;
+        }
+        let ret = await music.save();
+        await Musics.update(
+            { 
+                title: musicData.title,
+                artist: musicData.artist,
+                genre: musicData.genre,
+                url: musicData.url
+            },
+            { where: { id: musicData.id } }
+        );
+        return ret;      
+    } catch (error) {
+        console.error(error);  
+    }
 }
 
 MusicModel.deleteMusic = async (id) => {
@@ -100,10 +143,37 @@ MusicModel.initModel = async () => {
     await sequelize.authenticate()
     .then(() => {
         console.log('Sequelize DB 연결 성공');
-        Musics.sync().then( ret => {
-            console.log('Sync Success :', ret);
+        Musics.sync({
+            force:true
+        }).then( ret => {
+            console.log('Musics Sync Success :', ret);
         }).catch(error => {
-            console.log('Sync Failure :', error);
+            console.log('Musics Sync Failure :', error);
+        });
+        MusicAlbums.sync({
+            force:true
+        }).then( ret => {
+            console.log('MusicAlbums Sync Success :', ret);
+        }).catch(error => {
+            console.log('MusicAlbums Sync Failure :', error);
+        });
+
+        Musics.hasOne(MusicAlbums, {
+            foreignKey:'id',
+            onDelete:'cascade'
+        });
+    })
+    .catch(err => {
+        console.error('Sequelize DB 연결 실패 :', err);
+    });
+}
+
+MusicModel.initRelation = async () => {
+    await sequelize.authenticate()
+    .then(() => {
+        Musics.hasOne(MusicAlbums, {
+            foreignKey:'id',
+            onDelete:'cascade'
         });
     })
     .catch(err => {

@@ -20,7 +20,10 @@
         <tr>
             <td>url</td><td><input type="text" id="url" name="url" value="<%= music.url %>"/></td>
         </tr>
-        <tr><td rowspan="3"><a href="javascript:updateFunc(<%= music.id %>)">수정하기</a></td></tr>
+        <tr>
+            <td>album</td><td><input type="text" id="albumName" name="albumName" value="<%= music.MusicAlbum.dataValues.Albumname %>"/></td>
+        </tr>
+        <tr><td colspan="3"><a href="javascript:updateFunc(<%= music.id %>)">수정하기</a></td></tr>
     </table>
     </form>
     <script>
